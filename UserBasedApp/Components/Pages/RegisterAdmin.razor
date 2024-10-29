@@ -1,0 +1,55 @@
+﻿@page "/register-admin"
+@inject UserBasedApp.Services.UserService UserService
+@inject NavigationManager NavigationManager
+
+@if (isAdminCreationAllowed)
+{
+    <h3>Create Admin Account</h3>
+
+    <div class="form-group">
+        <label>Username</label>
+        <input @bind="username" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <input type="password" @bind="password" class="form-control" />
+    </div>
+
+    <button @onclick="RegisterAdminAsync" class="btn btn-primary">Register as Admin</button>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="text-danger">@errorMessage</p>
+    }
+}
+else
+{
+    <p>An admin account already exists. Please contact the admin for further access.</p>
+}
+
+@code {
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string? errorMessage;
+    private bool isAdminCreationAllowed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if there is already an admin in the system
+        isAdminCreationAllowed = !await UserService.HasAdminUserAsync();
+    }
+
+    private async Task RegisterAdminAsync()
+    {
+        var existingUser = await UserService.GetUserAsync(username);
+
+        if (existingUser != null)
+        {
+            errorMessage = "Username already exists.";
+            return;
+        }
+
+        await UserService.AddUserAsync(username, password, "Admin");
+        NavigationManager.NavigateTo("/login");
+    }
+}

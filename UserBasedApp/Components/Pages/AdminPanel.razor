@@ -1,0 +1,73 @@
+﻿@page "/admin"
+@using UserBasedApp.Models
+@inject UserBasedApp.Services.UserService UserService
+@inject UserBasedApp.Services.AuthService AuthService
+@inject NavigationManager NavigationManager
+
+@if (!AuthService.IsLoggedIn || !AuthService.IsAdmin)
+{
+    <p>You do not have permission to access this page.</p>
+}
+else
+{
+
+
+
+
+@if (!AuthService.IsLoggedIn || !AuthService.IsAdmin)
+{
+    <p>You do not have permission to access this page.</p>
+}
+else
+{
+    <h3>Admin Panel</h3>
+
+    <h4>All Users</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.Username</td>
+                    <td>@user.Role</td>
+                    <td>
+                        @if (user.Role != "Admin")
+                        {
+                            <button @onclick="() => MakeAdmin(user.Id)" class="btn btn-secondary">Make Admin</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+}
+
+@code {
+    private List<User> users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsLoggedIn && AuthService.IsAdmin)
+        {
+            users = await UserService.GetAllUsersAsync();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+
+    private async Task MakeAdmin(int userId)
+    {
+        await UserService.UpdateUserRoleAsync(userId, "Admin");
+        users = await UserService.GetAllUsersAsync(); // Refresh the user list
+    }
+}

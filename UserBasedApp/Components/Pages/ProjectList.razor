@@ -1,0 +1,55 @@
+﻿@page "/projects"
+@using UserBasedApp.Models
+@inject UserBasedApp.Services.AuthService AuthService
+@inject UserBasedApp.Services.ProjectService ProjectService
+@inject NavigationManager NavigationManager
+
+<h3>Your Projects</h3>
+
+@if (projects.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in projects)
+            {
+                <tr>
+                    <td>@project.Name</td>
+                    <td>@project.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>You have no projects.</p>
+}
+
+<button @onclick="NavigateToAddProject" class="btn btn-primary">Add New Project</button>
+
+@code {
+    private List<Project> projects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!AuthService.IsLoggedIn)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        var userId = AuthService.CurrentUser?.Id ?? 0;
+        projects = await ProjectService.GetProjectsByUserIdAsync(userId);
+    }
+
+    private void NavigateToAddProject()
+    {
+        NavigationManager.NavigateTo("/add-project");
+    }
+}
